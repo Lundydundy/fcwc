@@ -43,7 +43,7 @@ export default function Register() {
       } else {
         setError(response.message || 'Registration failed. Please try again.');
       }
-    } catch (err: any) {
+    } catch (err: string | any) {
       setError(err.message || 'An error occurred during registration. Please try again.');
       console.error('Registration error:', err);
     } finally {

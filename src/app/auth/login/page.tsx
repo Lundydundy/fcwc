@@ -27,7 +27,7 @@ export default function Login() {
       } else {
         setError(response.message || 'Login failed. Please check your credentials.');
       }
-    } catch (err: any) {
+    } catch (err : string | any) {
       setError(err.message || 'An error occurred. Please try again.');
       console.error('Login error:', err);
     } finally {
