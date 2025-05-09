@@ -1,0 +1,360 @@
+{
+  "info": {
+    "name": "Fantasy Club World Cup API Tests",
+    "description": "Collection of API calls to test the Fantasy Club World Cup backend",
+    "_postman_id": "fcwc-api-tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "User authentication endpoints",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/auth/me",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/users/profile",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teams",
+      "description": "Team management endpoints",
+      "item": [
+        {
+          "name": "Create Team",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/teams",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"The Champions\",\n    \"formation\": \"4-3-3\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get User Team",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/teams",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Update Team",
+          "request": {
+            "method": "PUT",
+            "url": "http://localhost:5000/api/teams",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"The Invincibles\",\n    \"formation\": \"3-4-3\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Make Transfers",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/teams/transfers",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"playersIn\": [\"player_id_1\", \"player_id_2\"],\n    \"playersOut\": [\"player_id_3\", \"player_id_4\"]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Players",
+      "description": "Player management endpoints",
+      "item": [
+        {
+          "name": "Get All Players",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/players",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Players with Filters",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/players?position=MID&maxPrice=12&sort=-totalPoints,name&page=1&limit=10",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Players by Search",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/players?search=Salah&club=Liverpool",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Single Player",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/players/{{player_id}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Add Player (Admin)",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/players",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Cristiano Ronaldo\",\n    \"club\": \"Al Nassr\",\n    \"position\": \"FWD\",\n    \"price\": 12.5,\n    \"totalPoints\": 200,\n    \"form\": 7.2,\n    \"stats\": {\n        \"goals\": 25,\n        \"assists\": 5,\n        \"cleanSheets\": 0,\n        \"saves\": 0,\n        \"yellowCards\": 3,\n        \"redCards\": 0,\n        \"minutesPlayed\": 2850\n    }\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leagues",
+      "description": "League management endpoints",
+      "item": [
+        {
+          "name": "Create League",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/leagues",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"The Elite League\",\n    \"description\": \"A competitive league for the best managers\",\n    \"type\": \"private\",\n    \"maxMembers\": 20\n}"
+            }
+          }
+        },
+        {
+          "name": "Get User Leagues",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/leagues",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Public Leagues",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/leagues/public?search=Elite&page=1&limit=10",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Single League",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/leagues/{{league_id}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Join League",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/leagues/join",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"inviteCode\": \"ABC123XYZ\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete League",
+          "request": {
+            "method": "DELETE",
+            "url": "http://localhost:5000/api/leagues/{{league_id}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "auth_token",
+      "value": "YOUR_JWT_TOKEN_AFTER_LOGIN",
+      "type": "string"
+    },
+    {
+      "key": "player_id",
+      "value": "PLAYER_ID_AFTER_SEEDING_DATA",
+      "type": "string"
+    },
+    {
+      "key": "league_id",
+      "value": "LEAGUE_ID_AFTER_CREATION",
+      "type": "string"
+    }
+  ]
+}
