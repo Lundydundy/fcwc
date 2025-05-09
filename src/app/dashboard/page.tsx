@@ -210,7 +210,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto py-12 sm:px-6 lg:px-8">
           <div className="bg-white shadow rounded-lg p-8 text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Welcome to Fantasy Club World Cup!</h2>
-            <p className="text-gray-600 mb-8">You haven't created your team yet. Start your fantasy journey by creating your dream team!</p>
+            <p className="text-gray-600 mb-8">You have not created your team yet. Start your fantasy journey by creating your dream team!</p>
             <Link
               href="/dashboard/create-team"
               className="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
