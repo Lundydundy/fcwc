@@ -181,7 +181,7 @@ export default function Dashboard() {
           setLeaguesLoading(true);
           const response = await leagueService.getJoinedLeagues();
           if (response.success && response.data) {
-            setLeagues(response.data);
+            setLeagues(response.data as LeagueData[]);
           }
           setLeaguesLoading(false);
         } catch (error) {
