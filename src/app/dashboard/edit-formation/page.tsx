@@ -456,7 +456,7 @@ export default function EditFormation() {
     const newBenchPlayers = [...benchPlayers];
     
     // Calculate target index
-    let targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+    const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
     
     // Check bounds
     if (targetIndex < 0 || targetIndex >= newBenchPlayers.length) {
