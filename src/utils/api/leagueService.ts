@@ -4,9 +4,26 @@ interface League {
   _id: string;
   name: string;
   description?: string;
-  createdBy: string;
-  isPublic: boolean;
-  maxTeams?: number;
+  owner: {
+    _id: string;
+    name?: string;
+    email?: string;
+  } | string;
+  type: 'public' | 'private';
+  maxMembers: number;
+  members: {
+    user: {
+      _id: string;
+      name: string;
+    };
+    team?: {
+      _id: string;
+      name: string;
+      totalPoints: number;
+    };
+    joinedAt: string;
+  }[];
+  inviteCode?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -14,15 +31,15 @@ interface League {
 interface LeagueCreateData {
   name: string;
   description?: string;
-  isPublic: boolean;
-  maxTeams?: number;
+  type: string;
+  maxMembers?: number;
 }
 
 interface LeagueUpdateData {
   name?: string;
   description?: string;
-  isPublic?: boolean;
-  maxTeams?: number;
+  type?: string;
+  maxMembers?: number;
 }
 
 interface LeagueResponse {
@@ -55,12 +72,11 @@ const leagueService = {
   getMyLeagues: async (): Promise<LeaguesResponse> => {
     return await apiClient.get('/api/leagues/my-leagues');
   },
-
   /**
    * Get leagues the current user is part of
    */
   getJoinedLeagues: async (): Promise<LeaguesResponse> => {
-    return await apiClient.get('/api/leagues/joined');
+    return await apiClient.get('/api/leagues');
   },
 
   /**
@@ -90,19 +106,51 @@ const leagueService = {
   deleteLeague: async (id: string): Promise<{ success: boolean, message: string }> => {
     return await apiClient.delete(`/api/leagues/${id}`);
   },
-
-  /**
-   * Join a league
+    /**
+   * Get detailed league information including members
    */
-  joinLeague: async (leagueId: string): Promise<{ success: boolean, message: string }> => {
-    return await apiClient.post(`/api/leagues/${leagueId}/join`, {});
+  getLeagueDetails: async (id: string): Promise<LeagueResponse> => {
+    return await apiClient.get(`/api/leagues/${id}`);
   },
-
+  
+  /**
+   * Join a league using invite code
+   */
+  joinLeague: async (inviteCode: string): Promise<{ success: boolean, message: string }> => {
+    return await apiClient.post(`/api/leagues/join`, { inviteCode });
+  },
   /**
    * Leave a league
    */
   leaveLeague: async (leagueId: string): Promise<{ success: boolean, message: string }> => {
     return await apiClient.delete(`/api/leagues/${leagueId}/leave`);
+  },
+  
+  /**
+   * Update user's team in all joined leagues
+   */
+  updateTeamInLeagues: async (): Promise<{ success: boolean, message: string, updatedCount: number }> => {
+    return await apiClient.put('/api/leagues/update-team', {});
+  },
+
+  /**
+   * Get all public leagues (no auth required)
+   */
+  getAllPublicLeagues: async (page: number = 1, limit: number = 50, search?: string): Promise<LeaguesResponse> => {
+    return await apiClient.get('/api/leagues/all-public', {
+      params: {
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(search ? { search } : {})
+      }
+    });
+  },
+
+  /**
+   * Join a public league by ID
+   */
+  joinPublicLeague: async (leagueId: string): Promise<{ success: boolean, message: string }> => {
+    return await apiClient.post(`/api/leagues/${leagueId}/join-public`, {});
   }
 };
 

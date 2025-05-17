@@ -262,9 +262,11 @@ export default function CreateTeam() {
         ...selectedPlayers.MID.map(p => ({ player: p.id, position: p.position, isOnBench: false })),
         ...selectedPlayers.FWD.map(p => ({ player: p.id, position: p.position, isOnBench: false })),
         ...selectedPlayers.BENCH.map(p => ({ player: p.id, position: p.position, isOnBench: true })),
-      ];
+      ];      await teamService.addPlayers({ players: allPlayers });
 
-      await teamService.addPlayers({ players: allPlayers });
+      // Update team info in all leagues the user has joined
+      const leagueService = (await import('@/utils/api/leagueService')).default;
+      await leagueService.updateTeamInLeagues();
 
       router.push('/dashboard');
 

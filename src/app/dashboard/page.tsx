@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/utils/context/AuthContext';
 import teamService from '@/utils/api/teamService';
 import matchService from '@/utils/api/matchService';
+import leagueService from '@/utils/api/leagueService';
 
 // Define TypeScript interfaces for our data
 interface PlayerData {
@@ -22,6 +22,7 @@ interface TeamPlayer {
   isOnBench: boolean;
   isCaptain: boolean;
   isViceCaptain: boolean;
+  benchOrder?: number; // Order on the bench (0-based index)
 }
 
 interface TeamData {
@@ -50,6 +51,58 @@ interface MatchData {
   venue?: string;
 }
 
+interface LeagueData {
+  _id: string;
+  name: string;
+  description?: string;
+  owner: {
+    _id: string;
+    name: string;
+  };
+  type: 'public' | 'private';
+  inviteCode?: string;
+  members: {
+    user: {
+      _id: string;
+      name: string;
+    };
+    team?: {
+      _id: string;
+      name: string;
+      totalPoints: number;
+    };
+    joinedAt: string;
+  }[];
+  maxMembers: number;
+  createdAt: string;
+}
+
+interface LeagueData {
+  _id: string;
+  name: string;
+  description?: string;
+  owner: {
+    _id: string;
+    name: string;
+  };
+  type: 'public' | 'private';
+  inviteCode?: string;
+  members: {
+    user: {
+      _id: string;
+      name: string;
+    };
+    team?: {
+      _id: string;
+      name: string;
+      totalPoints: number;
+    };
+    joinedAt: string;
+  }[];
+  maxMembers: number;
+  createdAt: string;
+}
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -58,6 +111,17 @@ export default function Dashboard() {
   const [teamData, setTeamData] = useState<TeamData | null>(null);
   const [matches, setMatches] = useState<MatchData[]>([]);
   const [matchesLoading, setMatchesLoading] = useState(false);
+  const [leagues, setLeagues] = useState<LeagueData[]>([]);
+  const [leaguesLoading, setLeaguesLoading] = useState(false);
+  const [createLeagueModal, setCreateLeagueModal] = useState(false);
+  const [joinLeagueModal, setJoinLeagueModal] = useState(false);  const [leagueFormData, setLeagueFormData] = useState({
+    name: '',
+    description: '',
+    type: 'private',
+    maxMembers: 20
+  });
+  const [inviteCode, setInviteCode] = useState('');
+  const [formError, setFormError] = useState('');
   const { user, logout } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -106,6 +170,27 @@ export default function Dashboard() {
       
       loadMatches();
       console.log(matches, 'Matches loaded');
+    }
+  }, [activeTab]);
+  
+  // Load leagues data when the leagues tab is active
+  useEffect(() => {
+    if (activeTab === 'leagues') {
+      const loadLeagues = async () => {
+        try {
+          setLeaguesLoading(true);
+          const response = await leagueService.getJoinedLeagues();
+          if (response.success && response.data) {
+            setLeagues(response.data);
+          }
+          setLeaguesLoading(false);
+        } catch (error) {
+          console.error('Failed to load leagues:', error);
+          setLeaguesLoading(false);
+        }
+      };
+      
+      loadLeagues();
     }
   }, [activeTab]);
   
@@ -333,10 +418,12 @@ export default function Dashboard() {
               aria-current={activeTab === 'transfers' ? 'page' : undefined}
             >
               Transfers
-            </button>
-            <button
-              onClick={() => setActiveTab('leagues')}
-              className={`${
+            </button>            <button
+              onClick={() => {
+                setActiveTab('leagues')
+                router.push('/dashboard/leagues');}
+              }
+              className={`$${
                 activeTab === 'leagues'
                   ? 'border-green-500 text-green-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -541,15 +628,22 @@ export default function Dashboard() {
                             </div>
                           </div>
                         </div>
-                      ))}
-
-                      {/* Bench Players */}
+                      ))}                      {/* Bench Players */}
                       <div className="px-4 py-2 bg-gray-50">
-                        <h4 className="text-sm font-medium text-gray-500">Bench</h4>
+                        <h4 className="text-sm font-medium text-gray-500">Bench (Substitution Order)</h4>
                       </div>
                       {teamData?.players
                         ?.filter((p: TeamPlayer) => p.isOnBench)
                         ?.sort((a: TeamPlayer, b: TeamPlayer) => {
+                          // If benchOrder is defined, use it
+                          if (a.benchOrder !== undefined && b.benchOrder !== undefined) {
+                            return a.benchOrder - b.benchOrder;
+                          }
+                          
+                          // Otherwise, ensure goalkeepers come first, then sort by position
+                          if (a.position === 'GK' && b.position !== 'GK') return -1;
+                          if (a.position !== 'GK' && b.position === 'GK') return 1;
+                          
                           const posOrder: Record<string, number> = { GK: 1, DEF: 2, MID: 3, FWD: 4 };
                           return posOrder[a.position] - posOrder[b.position];
                         })
@@ -558,6 +652,9 @@ export default function Dashboard() {
                           <div className="grid grid-cols-6 gap-4">
                             <div className="font-medium text-gray-700">
                               {typeof player.player === 'object' ? player.player.name : 'Unknown Player'}
+                              <span className={`ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded-full ${idx === 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`} title="Substitution order">
+                                {idx === 0 ? '1st' : (idx === 1 ? '2nd' : (idx === 2 ? '3rd' : `${idx+1}th`))}
+                              </span>
                             </div>
                             <div className="text-gray-500">
                               {typeof player.player === 'object' ? player.player.club : ''}
@@ -691,8 +788,260 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Leagues Tab Content */}
+        {activeTab === 'leagues' && (
+          <div className="py-6">
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Leagues</h3>
+                <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                  Manage your league memberships and create or join leagues.
+                </p>
+              </div>
+              
+              {leaguesLoading ? (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500">Loading leagues...</p>
+                </div>
+              ) : (
+                <div className="px-4 py-5 sm:p-6">
+                  {/* User's Leagues */}
+                  <h4 className="text-md font-medium text-gray-700 mb-4">Your Leagues</h4>
+                  <div className="space-y-4 mb-8">
+                    {leagues.length > 0 ? (
+                      leagues.map(league => (
+                        <div key={league._id} className="border rounded-lg p-4 hover:bg-gray-50">
+                          <div className="flex justify-between items-center">
+                            <div className="text-sm font-medium text-gray-900">{league.name}</div>
+                            <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                              {league.type === 'public' ? 'Public' : 'Private'}
+                            </div>
+                          </div>
+                          <div className="mt-2 text-sm text-gray-500">
+                            {league.description}
+                          </div>
+                          <div className="mt-3 flex justify-between items-center">
+                            <div className="text-xs text-gray-500">
+                              {league.members.length} / {league.maxMembers} members
+                            </div>
+                            <Link 
+                              href={`/dashboard/leagues/${league._id}`}
+                              className="text-sm font-medium text-green-600 hover:text-green-500"
+                            >
+                              View League
+                            </Link>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">You are not a member of any leagues yet.</p>
+                    )}
+                  </div>
+                  
+                  {/* Create or Join League buttons */}
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={() => setCreateLeagueModal(true)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    >
+                      Create League
+                    </button>
+                    <button
+                      onClick={() => setJoinLeagueModal(true)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Join League
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Other tab content would go here */}
       </div>
+
+      {/* Create League Modal */}
+      {createLeagueModal && (
+        <div className="fixed inset-0 z-50 overflow-auto bg-smoke-800 flex">
+          <div className="relative p-8 bg-white rounded-lg shadow-md max-w-lg w-full m-auto">
+            <h2 className="text-xl font-bold mb-4">Create a New League</h2>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="leagueName">
+                League Name
+              </label>
+              <input
+                type="text"
+                id="leagueName"
+                value={leagueFormData.name}
+                onChange={(e) => setLeagueFormData({ ...leagueFormData, name: e.target.value })}
+                className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                placeholder="Enter league name"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="leagueDescription">
+                Description
+              </label>
+              <textarea
+                id="leagueDescription"
+                value={leagueFormData.description}
+                onChange={(e) => setLeagueFormData({ ...leagueFormData, description: e.target.value })}
+                className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                placeholder="Enter a brief description of the league"
+                rows={3}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="leagueType">
+                League Type
+              </label>
+              <select
+                id="leagueType"
+                value={leagueFormData.type}
+                onChange={(e) => setLeagueFormData({ ...leagueFormData, type: e.target.value as 'public' | 'private' })}
+                className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                <option value="private">Private</option>
+                <option value="public">Public</option>
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="maxMembers">
+                Max Members
+              </label>
+              <input
+                type="number"
+                id="maxMembers"
+                value={leagueFormData.maxMembers}
+                onChange={(e) => setLeagueFormData({ ...leagueFormData, maxMembers: Number(e.target.value) })}
+                className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                placeholder="Enter maximum number of members"
+                min={2}
+                max={100}
+              />
+            </div>
+
+            {formError && (
+              <div className="mb-4 text-red-600 text-sm">
+                {formError}
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setCreateLeagueModal(false)}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-400 hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    setFormError('');
+                    // Validate form data
+                    if (!leagueFormData.name) {
+                      setFormError('League name is required');
+                      return;
+                    }
+                    if (leagueFormData.maxMembers < 2) {
+                      setFormError('Max members must be at least 2');
+                      return;
+                    }
+                    
+                    // Create league API call
+                    const response = await leagueService.createLeague(leagueFormData);
+                    if (response.success) {
+                      setCreateLeagueModal(false);
+                      setLeagueFormData({ name: '', description: '', type: 'private', maxMembers: 20 });
+                      // Optionally, refetch leagues or update state to include new league
+                    } else {
+                      setFormError(response.message || 'Failed to create league');
+                    }
+                  } catch (error) {
+                    setFormError('An error occurred while creating the league');
+                    console.error(error);
+                  }
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                Create League
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Join League Modal */}
+      {joinLeagueModal && (
+        <div className="fixed inset-0 z-50 overflow-auto bg-smoke-800 flex">
+          <div className="relative p-8 bg-white rounded-lg shadow-md max-w-lg w-full m-auto">
+            <h2 className="text-xl font-bold mb-4">Join a League</h2>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="inviteCode">
+                Invite Code
+              </label>
+              <input
+                type="text"
+                id="inviteCode"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                placeholder="Enter the invite code for the league"
+              />
+            </div>
+
+            {formError && (
+              <div className="mb-4 text-red-600 text-sm">
+                {formError}
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setJoinLeagueModal(false)}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-400 hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    setFormError('');
+                    // Validate invite code
+                    if (!inviteCode) {
+                      setFormError('Invite code is required');
+                      return;
+                    }
+                    
+                    // Join league API call
+                    const response = await leagueService.joinLeague(inviteCode);
+                    if (response.success) {
+                      setJoinLeagueModal(false);
+                      setInviteCode('');
+                      // Optionally, refetch leagues or update state to include new league membership
+                    } else {
+                      setFormError(response.message || 'Failed to join league');
+                    }
+                  } catch (error) {
+                    setFormError('An error occurred while joining the league');
+                    console.error(error);
+                  }
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Join League
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

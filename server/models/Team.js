@@ -50,8 +50,7 @@ const TeamSchema = new mongoose.Schema({
       position: {
         type: String,
         enum: ['GK', 'DEF', 'MID', 'FWD']
-      },
-      isOnBench: {
+      },      isOnBench: {
         type: Boolean,
         default: false
       },
@@ -62,6 +61,9 @@ const TeamSchema = new mongoose.Schema({
       isViceCaptain: {
         type: Boolean,
         default: false
+      },      benchOrder: {
+        type: Number,
+        default: undefined
       }
     }
   ],

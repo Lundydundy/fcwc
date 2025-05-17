@@ -22,6 +22,7 @@ interface TeamPlayer {
   isOnBench: boolean;
   isCaptain?: boolean;
   isViceCaptain?: boolean;
+  benchOrder?: number;  // Position on bench (0-based index)
 }
 
 interface Team {
@@ -113,10 +114,28 @@ export default function EditFormation() {
         const response = await teamService.getUserTeam();
         setTeam(response);
         setSelectedFormation(response.formation);
-        
-        // Separate players into starting and bench
+          // Separate players into starting and bench
         const starting = response.players.filter((p: TeamPlayer) => !p.isOnBench);
-        const bench = response.players.filter((p: TeamPlayer) => p.isOnBench);
+        let bench = response.players.filter((p: TeamPlayer) => p.isOnBench);
+        
+        // Sort bench players by benchOrder if available, otherwise ensure goalkeepers are first
+        bench = bench.sort((a: TeamPlayer, b: TeamPlayer) => {
+          // If benchOrder is available, use it
+          if (a.benchOrder !== undefined && b.benchOrder !== undefined) {
+            return a.benchOrder - b.benchOrder;
+          }
+          
+          // Otherwise, make sure GK is always first
+          if (a.position === 'GK' && b.position !== 'GK') {
+            return -1;
+          }
+          if (a.position !== 'GK' && b.position === 'GK') {
+            return 1;
+          }
+          
+          // If both are GK or both are not GK, keep original order
+          return 0;
+        });
         
         setStartingPlayers(starting);
         setBenchPlayers(bench);
@@ -372,20 +391,39 @@ export default function EditFormation() {
       // Update formation if changed
       if (formationChanged && team && selectedFormation !== team.formation) {
         await teamService.updateTeam({ formation: selectedFormation });
+      }      // Define the type for player updates
+      interface PlayerUpdate {
+        playerId: string;
+        isOnBench: boolean;
+        isCaptain: boolean;
+        isViceCaptain: boolean;
+        benchOrder?: number;
       }
       
-      // Prepare updated player data - ensuring consistent ID handling
-      const updatedPlayers = [...startingPlayers, ...benchPlayers].map(player => {
-        // Extract player ID consistently
+      // Prepare player updates
+      const updatedPlayers: PlayerUpdate[] = [];
+
+      // Process starting players first (no bench order needed)
+      startingPlayers.forEach(player => {
         const playerId = getPlayerId(player.player);
-        
-        // Use consistent player ID for all references
-        return {
+        updatedPlayers.push({
           playerId: playerId,
-          isOnBench: player.isOnBench,
+          isOnBench: false,
           isCaptain: playerId === captain,
           isViceCaptain: playerId === viceCaptain
-        };
+        });
+      });
+      
+      // Process bench players with their order preserved
+      benchPlayers.forEach((player, index) => {
+        const playerId = getPlayerId(player.player);
+        updatedPlayers.push({
+          playerId: playerId,
+          isOnBench: true,
+          isCaptain: false,
+          isViceCaptain: false,
+          benchOrder: index // Store their position in the bench lineup (0-based index)
+        });
       });
       
       // Log player updates for debugging
@@ -412,6 +450,41 @@ export default function EditFormation() {
   // Calculate formation limits
   const formationLimits = selectedFormation ? getFormationCounts(selectedFormation) : { GK: 1, DEF: 4, MID: 4, FWD: 2 };
   
+  // Move bench player left or right
+  const handleMoveBenchPlayer = (currentIndex: number, direction: 'left' | 'right') => {
+    // Make a copy of benchPlayers
+    const newBenchPlayers = [...benchPlayers];
+    
+    // Calculate target index
+    let targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+    
+    // Check bounds
+    if (targetIndex < 0 || targetIndex >= newBenchPlayers.length) {
+      return; // Out of bounds, do nothing
+    }
+    
+    // Special handling for GK - GK must always be in the first position
+    const currentPlayer = newBenchPlayers[currentIndex];
+    const targetPlayer = newBenchPlayers[targetIndex];
+    
+    // If player is GK, don't allow moving right
+    if (currentPlayer.position === 'GK' && direction === 'right') {
+      return;
+    }
+    
+    // If target is GK, don't allow moving left
+    if (targetPlayer.position === 'GK' && direction === 'left') {
+      return;
+    }
+    
+    // Swap the players in the list
+    [newBenchPlayers[currentIndex], newBenchPlayers[targetIndex]] = 
+      [newBenchPlayers[targetIndex], newBenchPlayers[currentIndex]];
+    
+    // Update the state with the new bench order
+    setBenchPlayers(newBenchPlayers);
+  };
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
@@ -735,14 +808,52 @@ export default function EditFormation() {
                         key={`bench-${idx}`} 
                         className={`bench-player ${isSelectedPlayer ? 'selected' : ''}`}
                         onClick={() => selectPlayer(player)}
-                      >
-                        <div className="flex justify-between items-start">
+                      >                        <div className="flex justify-between items-start">
                           <div>
-                            <div className="font-medium text-sm">{getPlayerName(player).split(' ').pop()}</div>
+                            <div className="font-medium text-sm">
+                              {getPlayerName(player).split(' ').pop()}
+                              <span className={`ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded-full ${
+                                idx === 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                              }`} title="Substitution order">
+                                {idx === 0 ? '1st' : (idx === 1 ? '2nd' : (idx === 2 ? '3rd' : `${idx+1}th`))}
+                              </span>
+                            </div>
                             <div className="text-xs text-gray-500">{getPlayerClub(player)}</div>
                             <div className="mt-1 text-xs inline-block bg-gray-100 px-2 py-0.5 rounded">
                               {player.position}
                             </div>
+                          </div>
+                            {/* Move buttons for bench players */}
+                          <div className="flex-shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMoveBenchPlayer(idx, 'left');
+                              }}
+                              disabled={idx === 0 || (player.position === 'GK')}
+                              className={`ml-2 p-1 rounded-full 
+                                ${idx === 0 || (player.position === 'GK') ? 'opacity-50 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300'}`}
+                              title="Move left (higher priority)"
+                            >
+                              <svg className="w-4 h-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M15 19l-7-7 7-7" />
+                              </svg>
+                            </button>
+                            
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMoveBenchPlayer(idx, 'right');
+                              }}
+                              disabled={idx === benchPlayers.length - 1 || (player.position === 'GK')}
+                              className={`ml-2 p-1 rounded-full 
+                                ${idx === benchPlayers.length - 1 || (player.position === 'GK') ? 'opacity-50 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300'}`}
+                              title="Move right (lower priority)"
+                            >
+                              <svg className="w-4 h-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
                           </div>
                         </div>
                       </div>

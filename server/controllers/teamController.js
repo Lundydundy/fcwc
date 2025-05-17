@@ -46,15 +46,34 @@ exports.createTeam = async (req, res) => {
     }
 
     // Extract team data from request
-    const { name, players, formation } = req.body;
-
-    // Create basic team first
+    const { name, players, formation } = req.body;    // Create basic team first
     const team = await Team.create({
       name,
       formation: formation || '4-4-2',
       user: req.user.id,
       players: []  // Start with empty players array
     });
+
+    // Update the team in all leagues the user is part of
+    try {
+      // Find all leagues where user is a member
+      const League = require('../models/League');
+      const leagues = await League.find({ 'members.user': req.user.id });
+          // Update team reference in each league
+      for (const league of leagues) {
+        const memberIndex = league.members.findIndex(
+          member => member.user.toString() === req.user.id
+        );
+        
+        if (memberIndex !== -1) {
+          league.members[memberIndex].team = team._id;
+          await league.save();
+        }
+      }
+    } catch (error) {
+      console.error('Error updating team in leagues:', error);
+      // Continue even if there's an error updating leagues
+    }
 
     res.status(201).json({
       success: true,
@@ -600,8 +619,7 @@ exports.updatePlayerRoles = async (req, res) => {
           }
         }
       }
-      
-      if (playerIndex !== undefined) {
+        if (playerIndex !== undefined) {
         if (isOnBench !== undefined) {
           team.players[playerIndex].isOnBench = isOnBench;
         }
@@ -626,6 +644,10 @@ exports.updatePlayerRoles = async (req, res) => {
             });
           }
           team.players[playerIndex].isViceCaptain = isViceCaptain;
+        }
+        // Handle benchOrder if provided
+        if (update.benchOrder !== undefined) {
+          team.players[playerIndex].benchOrder = update.benchOrder;
         }
       }
     }

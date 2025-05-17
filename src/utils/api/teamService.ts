@@ -25,6 +25,7 @@ interface TeamPlayer {
   isOnBench: boolean;
   isCaptain: boolean;
   isViceCaptain: boolean;
+  benchOrder?: number; // Position on bench for substitution order
 }
 
 interface FantasyTeam {
@@ -68,6 +69,7 @@ interface BulkPlayerRoleUpdateData {
     isOnBench?: boolean;
     isCaptain?: boolean;
     isViceCaptain?: boolean;
+    benchOrder?: number;
   }[];
 }
 
