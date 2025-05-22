@@ -138,6 +138,21 @@ export default function CreateTeam() {
     loadData();
   }, []);
 
+  // Redirect if user already has a team
+  useEffect(() => {
+    const checkUserTeam = async () => {
+      try {
+        const team = await teamService.getUserTeam();
+        if (team) {
+          router.replace('/dashboard');
+        }
+      } catch (err) {
+        // If error, assume no team exists (do nothing)
+      }
+    };
+    checkUserTeam();
+  }, [router]);
+
   // Filter players by position, club, and search term
   useEffect(() => {
     if (!availablePlayers.length) return;
@@ -704,9 +719,8 @@ export default function CreateTeam() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">Create Your Fantasy Team</h1>
-
+    <div className="max-w-6xl mx-auto py-8 px-2 sm:px-6 lg:px-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-8 text-center">Create Your Fantasy Team</h1>
       {step === 1 ? renderStep1() : renderStep2()}
     </div>
   );

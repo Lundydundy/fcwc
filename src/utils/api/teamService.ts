@@ -209,6 +209,15 @@ const teamService = {
   deleteTeam: async (teamId: string): Promise<void> => {
     return await apiClient.delete(`/api/teams/${teamId}`);
   },
+
+  /**
+   * Get team points for a specific gameweek
+   */
+  getTeamPointsForGameweek: async (gameweekNumber: number) => {
+    // Assumes backend endpoint: /api/teams/points/:gameweekNumber
+    const response = await apiClient.get(`/api/teams/points/${gameweekNumber}`);
+    return response.data;
+  },
 };
 
 export default teamService;

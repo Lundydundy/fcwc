@@ -424,480 +424,482 @@ export default function Transfers() {
   }
 
   return (
-    <div className="py-6">
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-        <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-          <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Transfer Players</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Make changes to your team by transferring players in and out
-            </p>
+    <div className="min-h-screen bg-gray-100 px-2 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-6">
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+          <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+            <div>
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Transfer Players</h3>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                Make changes to your team by transferring players in and out
+              </p>
+            </div>
+            <div className="flex items-center">
+              <button
+                onClick={goBackToDashboard}
+                className="mr-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Back to Dashboard
+              </button>
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Remaining Budget</p>
+                <p className="text-2xl font-bold text-green-600">£{calculateRemainingBudget().toFixed(1)}m</p>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center">
-            <button
-              onClick={goBackToDashboard}
-              className="mr-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              Back to Dashboard
-            </button>
-            <div className="text-right">
-              <p className="text-sm text-gray-500">Remaining Budget</p>
-              <p className="text-2xl font-bold text-green-600">£{calculateRemainingBudget().toFixed(1)}m</p>
+
+          {/* Pending Transfers */}
+          {pendingTransfers.length > 0 && (
+            <div className="border-t border-gray-200 p-4">
+              <h4 className="text-md font-medium text-gray-700 mb-3">Pending Transfers</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Out
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        In
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Position
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price Diff
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {pendingTransfers.map((transfer, index) => {
+                      const outPlayer =
+                        typeof transfer.out.player === 'object' ? transfer.out.player : null;
+                      const inPlayer = transfer.in;
+                      const priceDiff = outPlayer
+                        ? (inPlayer.price - outPlayer.price).toFixed(1)
+                        : '0.0';
+                      const isPriceNegative = outPlayer ? inPlayer.price < outPlayer.price : false;
+
+                      return (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-black">
+                            {outPlayer ? outPlayer.name : 'Unknown Player'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-black">{inPlayer.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-black">{inPlayer.position}</td>
+                          <td
+                            className={`px-6 py-4 whitespace-nowrap ${
+                              isPriceNegative ? 'text-green-600' : 'text-red-600'
+                            }`}
+                          >
+                            {isPriceNegative ? '-' : '+'}£{Math.abs(parseFloat(priceDiff)).toFixed(1)}m
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => removeTransfer(index)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Cancel
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 text-right">
+                <button
+                  onClick={confirmTransfers}
+                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  Confirm Transfers
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 border-t border-gray-200">
+            {/* Team Section - Left Column */}
+            <div className="col-span-1 bg-gray-50 p-4 rounded">
+              <h4 className="text-md font-medium text-gray-700 mb-3">Your Team</h4>
+
+              {/* Display players by position */}
+              {['GK', 'DEF', 'MID', 'FWD'].map((position) => (
+                <div key={position} className="mb-4">
+                  <h5 className="text-sm font-medium text-gray-600 mb-2">
+                    {position === 'GK'
+                      ? 'Goalkeepers'
+                      : position === 'DEF'
+                      ? 'Defenders'
+                      : position === 'MID'
+                      ? 'Midfielders'
+                      : 'Forwards'}
+                  </h5>
+                  <div className="space-y-2">
+                    {getPlayersByPosition(position, false).map((player, idx) => {
+                      const playerObj = typeof player.player === 'object' ? player.player : null;
+                      if (!playerObj) return null;
+
+                      return (
+                        <div
+                          key={`${playerObj.name}-${idx}`}
+                          className={`hover:bg-sky-100 cursor-pointer flex justify-between items-center p-2 rounded ${
+                            selectedPlayerKey === `${idx}-${player.position}-${player.isOnBench ? 'bench' : 'field'}`
+                              ? 'bg-blue-100 border border-blue-300'
+                              : 'bg-white'
+                          } ${isPendingTransfer(player) ? 'opacity-50' : ''}`}
+                          onClick={(e) => {
+                          if(!isPendingTransfer(player)) selectPlayerToReplace(player)
+                          setSelectedPlayerKey(`${idx}-${player.position}-${player.isOnBench ? 'bench' : 'field'}`
+                          );
+
+                          }}
+                        >
+                          <div className="flex items-center">
+                            {player.isCaptain && (
+                              <span className="mr-1 text-xs bg-yellow-400 text-white rounded-full w-4 h-4 inline-flex items-center justify-center">
+                                C
+                              </span>
+                            )}
+                            {player.isViceCaptain && (
+                              <span className="mr-1 text-xs bg-gray-400 text-white rounded-full w-4 h-4 inline-flex items-center justify-center">
+                                V
+                              </span>
+                            )}
+                            <span className='text-black'>{playerObj.name}</span>
+                          </div>
+                          <div className="text-sm text-gray-500">£{playerObj.price.toFixed(1)}m</div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Bench players for this position */}
+                    {getPlayersByPosition(position, true).map((player, idx) => {
+                      const playerObj = typeof player.player === 'object' ? player.player : null;
+                      if (!playerObj) return null;
+
+                      return (
+                        <div
+                          key={`bench-${playerObj.name}-${idx}`}
+                          className={`hover:bg-sky-100 cursor-pointer flex justify-between items-center p-2 rounded ${
+                            selectedPlayerKey === `${idx}-${player.position}-${player.isOnBench ? 'bench' : 'field'}`
+                              ? 'bg-blue-100 border border-blue-300'
+                              : 'bg-white'
+                          } ${isPendingTransfer(player) ? 'opacity-50' : ''}`}
+                          onClick={(e) => {if(!isPendingTransfer(player)) selectPlayerToReplace(player)
+                          setSelectedPlayerKey(`${idx}-${player.position}-${player.isOnBench ? 'bench' : 'field'}`
+                            
+                          );
+                          
+                        }}
+                        >
+                          <div className="flex items-center">
+                            <span className="mr-1 text-xs bg-gray-200 text-gray-800 rounded px-1">
+                              BENCH
+                            </span>
+                            {player.isCaptain && (
+                              <span className="mr-1 text-xs bg-yellow-400 text-white rounded-full w-4 h-4 inline-flex items-center justify-center">
+                                C
+                              </span>
+                            )}
+                            {player.isViceCaptain && (
+                              <span className="mr-1 text-xs bg-gray-400 text-white rounded-full w-4 h-4 inline-flex items-center justify-center">
+                                V
+                              </span>
+                            )}
+                            <span className='text-black'>{playerObj.name}</span>
+                          </div>
+                          <div className="text-sm text-gray-500">£{playerObj.price.toFixed(1)}m</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Available Players - Middle Column */}
+            <div className="col-span-1 lg:col-span-2">
+              <div className="mb-4">
+                <h4 className="text-md font-medium text-gray-700 mb-3">Available Players</h4>
+
+                {/* Filters */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <input
+                      type="text"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md text-black"
+                      placeholder="Player or club name"
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                    <div className="flex space-x-2">
+                      <button
+                        className={`px-3 py-1 text-sm rounded ${
+                          selectedPosition === 'All'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                        onClick={() => handlePositionChange('All')}
+                      >
+                        All
+                      </button>
+                      <button
+                        className={`px-3 py-1 text-sm rounded ${
+                          selectedPosition === 'GK'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                        onClick={() => handlePositionChange('GK')}
+                      >
+                        GK
+                      </button>
+                      <button
+                        className={`px-3 py-1 text-sm rounded ${
+                          selectedPosition === 'DEF'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                        onClick={() => handlePositionChange('DEF')}
+                      >
+                        DEF
+                      </button>
+                      <button
+                        className={`px-3 py-1 text-sm rounded ${
+                          selectedPosition === 'MID'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                        onClick={() => handlePositionChange('MID')}
+                      >
+                        MID
+                      </button>
+                      <button
+                        className={`px-3 py-1 text-sm rounded ${
+                          selectedPosition === 'FWD'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                        onClick={() => handlePositionChange('FWD')}
+                      >
+                        FWD
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Price (max £{priceRange[1]}m)
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="20"
+                      step="0.5"
+                      value={priceRange[1]}
+                      onChange={handlePriceRangeChange}
+                      className="block w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-1">Sort By</label>
+                    <div className="flex">
+                      <select
+                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md rounded-r-none text-black"
+                        value={sortBy}
+                        onChange={handleSortChange}
+                      >
+                        <option value="totalPoints">Points</option>
+                        <option value="price">Price</option>
+                        <option value="form">Form</option>
+                        <option value="name">Name</option>
+                      </select>
+                      <button
+                        onClick={toggleSortOrder}
+                        className="cursor-pointer px-3 bg-gray-100 border border-gray-300 border-l-0 rounded-r-md text-black"
+                      >
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Players List */}
+                <div className="bg-white overflow-hidden border border-gray-200 sm:rounded-md">
+                  {filteredPlayers.length === 0 ? (
+                    <div className="p-6 text-center text-gray-500">
+                      No players found matching your criteria
+                    </div>
+                  ) : (
+                    <ul className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                      {filteredPlayers.slice(0, 100).map((player) => (
+                        <li
+                          key={player.id}
+                          className={`px-4 py-2 hover:bg-gray-50 cursor-pointer ${
+                            selectedPlayer && selectedPlayer.id === player.id ? 'bg-blue-50' : ''
+                          }`}
+                          onClick={() => selectPlayer(player)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="flex items-center">
+                                <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-100 text-xs text-gray-800 mr-2">
+                                  {player.position}
+                                </span>
+                                <span className="font-medium text-black">{player.name}</span>
+                              </div>
+                              <div className="text-sm text-gray-500">{player.club}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-medium text-black">£{player.price.toFixed(1)}m</div>
+                              <div className="text-sm text-gray-500">{player.totalPoints} pts</div>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              {/* Transfer Action Section */}
+              {selectedPlayer && playerToReplace && typeof playerToReplace.player === 'object' && (
+                <div className="bg-white p-4 rounded border border-gray-200 mb-4">
+                  <h4 className="text-md font-medium text-gray-700 mb-3">Transfer Preview</h4>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-red-50 p-3 rounded border border-red-100">
+                      <h5 className="text-sm font-medium text-red-700 mb-2">Player Out</h5>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-black">{playerToReplace.player.name}</div>
+                          <div className="text-sm text-black">{playerToReplace.player.club}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-black">
+                            £{playerToReplace.player.price.toFixed(1)}m
+                          </div>
+                          <div className="text-sm text-black">
+                            {playerToReplace.player.totalPoints} pts
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-green-50 p-3 rounded border border-green-100">
+                      <h5 className="text-sm font-medium text-green-700 mb-2">Player In</h5>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-black">{selectedPlayer.name}</div>
+                          <div className="text-sm text-black">{selectedPlayer.club}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-black">
+                            £{selectedPlayer.price.toFixed(1)}m
+                          </div>
+                          <div className="text-sm text-black">{selectedPlayer.totalPoints} pts</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex justify-between items-center">
+                    <div>
+                      <span className="text-sm text-gray-600">Price Difference: </span>
+                      <span
+                        className={
+                          selectedPlayer.price > playerToReplace.player.price
+                            ? 'text-red-600'
+                            : 'text-green-600'
+                        }
+                      >
+                        {selectedPlayer.price > playerToReplace.player.price ? '+' : '-'}
+                        £{Math.abs(selectedPlayer.price - playerToReplace.player.price).toFixed(1)}m
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={addTransfer}
+                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Add to Transfer List
+                    </button>
+                  </div>
+                  <div className="mt-3 flex justify-between items-center">
+                    <button
+                      onClick={cancelSelection}
+                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    >
+                      Deselect
+                    </button>
+                    <button
+                      onClick={goBackToDashboard}
+                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      Back to Dashboard
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Pending Transfers */}
-        {pendingTransfers.length > 0 && (
-          <div className="border-t border-gray-200 p-4">
-            <h4 className="text-md font-medium text-gray-700 mb-3">Pending Transfers</h4>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Out
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      In
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Position
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Price Diff
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {pendingTransfers.map((transfer, index) => {
-                    const outPlayer =
-                      typeof transfer.out.player === 'object' ? transfer.out.player : null;
-                    const inPlayer = transfer.in;
-                    const priceDiff = outPlayer
-                      ? (inPlayer.price - outPlayer.price).toFixed(1)
-                      : '0.0';
-                    const isPriceNegative = outPlayer ? inPlayer.price < outPlayer.price : false;
-
-                    return (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-black">
-                          {outPlayer ? outPlayer.name : 'Unknown Player'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-black">{inPlayer.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-black">{inPlayer.position}</td>
-                        <td
-                          className={`px-6 py-4 whitespace-nowrap ${
-                            isPriceNegative ? 'text-green-600' : 'text-red-600'
-                          }`}
-                        >
-                          {isPriceNegative ? '-' : '+'}£{Math.abs(parseFloat(priceDiff)).toFixed(1)}m
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            onClick={() => removeTransfer(index)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Cancel
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-4 text-right">
-              <button
-                onClick={confirmTransfers}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                Confirm Transfers
-              </button>
+        {/* Confirmation Modal */}
+        {showConfirmation && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3 text-center">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Confirm Transfers</h3>
+                <div className="mt-2 px-7 py-3">
+                  <p className="text-sm text-gray-500">
+                    Are you sure you want to make {pendingTransfers.length} transfer
+                    {pendingTransfers.length > 1 ? 's' : ''}?
+                  </p>
+                  <div className="mt-4 border-t pt-4">
+                    {pendingTransfers.map((transfer, index) => {
+                      const outPlayer = typeof transfer.out.player === 'object' ? transfer.out.player : null;
+                      return (
+                        <div key={index} className="flex justify-between items-center mb-2 text-sm">
+                          <span className="text-red-600">{outPlayer?.name} OUT</span>
+                          <span className="text-green-600">{transfer.in.name} IN</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="border-t pt-4 mt-4">
+                    <p className="font-medium text-black">New Budget: £{calculateRemainingBudget().toFixed(1)}m</p>
+                  </div>
+                </div>
+                <div className="items-center px-4 py-3 flex justify-between">
+                  <button
+                    onClick={cancelConfirmation}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={processTransfers}
+                    className="px-4 py-2 bg-green-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 border-t border-gray-200">
-          {/* Team Section - Left Column */}
-          <div className="col-span-1 bg-gray-50 p-4 rounded">
-            <h4 className="text-md font-medium text-gray-700 mb-3">Your Team</h4>
-
-            {/* Display players by position */}
-            {['GK', 'DEF', 'MID', 'FWD'].map((position) => (
-              <div key={position} className="mb-4">
-                <h5 className="text-sm font-medium text-gray-600 mb-2">
-                  {position === 'GK'
-                    ? 'Goalkeepers'
-                    : position === 'DEF'
-                    ? 'Defenders'
-                    : position === 'MID'
-                    ? 'Midfielders'
-                    : 'Forwards'}
-                </h5>
-                <div className="space-y-2">
-                  {getPlayersByPosition(position, false).map((player, idx) => {
-                    const playerObj = typeof player.player === 'object' ? player.player : null;
-                    if (!playerObj) return null;
-
-                    return (
-                      <div
-                        key={`${playerObj.name}-${idx}`}
-                        className={`hover:bg-sky-100 cursor-pointer flex justify-between items-center p-2 rounded ${
-                          selectedPlayerKey === `${idx}-${player.position}-${player.isOnBench ? 'bench' : 'field'}`
-                            ? 'bg-blue-100 border border-blue-300'
-                            : 'bg-white'
-                        } ${isPendingTransfer(player) ? 'opacity-50' : ''}`}
-                        onClick={(e) => {
-                        if(!isPendingTransfer(player)) selectPlayerToReplace(player)
-                        setSelectedPlayerKey(`${idx}-${player.position}-${player.isOnBench ? 'bench' : 'field'}`
-                        );
-
-                        }}
-                      >
-                        <div className="flex items-center">
-                          {player.isCaptain && (
-                            <span className="mr-1 text-xs bg-yellow-400 text-white rounded-full w-4 h-4 inline-flex items-center justify-center">
-                              C
-                            </span>
-                          )}
-                          {player.isViceCaptain && (
-                            <span className="mr-1 text-xs bg-gray-400 text-white rounded-full w-4 h-4 inline-flex items-center justify-center">
-                              V
-                            </span>
-                          )}
-                          <span className='text-black'>{playerObj.name}</span>
-                        </div>
-                        <div className="text-sm text-gray-500">£{playerObj.price.toFixed(1)}m</div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Bench players for this position */}
-                  {getPlayersByPosition(position, true).map((player, idx) => {
-                    const playerObj = typeof player.player === 'object' ? player.player : null;
-                    if (!playerObj) return null;
-
-                    return (
-                      <div
-                        key={`bench-${playerObj.name}-${idx}`}
-                        className={`hover:bg-sky-100 cursor-pointer flex justify-between items-center p-2 rounded ${
-                          selectedPlayerKey === `${idx}-${player.position}-${player.isOnBench ? 'bench' : 'field'}`
-                            ? 'bg-blue-100 border border-blue-300'
-                            : 'bg-white'
-                        } ${isPendingTransfer(player) ? 'opacity-50' : ''}`}
-                        onClick={(e) => {if(!isPendingTransfer(player)) selectPlayerToReplace(player)
-                        setSelectedPlayerKey(`${idx}-${player.position}-${player.isOnBench ? 'bench' : 'field'}`
-                            
-                        );
-                          
-                        }}
-                      >
-                        <div className="flex items-center">
-                          <span className="mr-1 text-xs bg-gray-200 text-gray-800 rounded px-1">
-                            BENCH
-                          </span>
-                          {player.isCaptain && (
-                            <span className="mr-1 text-xs bg-yellow-400 text-white rounded-full w-4 h-4 inline-flex items-center justify-center">
-                              C
-                            </span>
-                          )}
-                          {player.isViceCaptain && (
-                            <span className="mr-1 text-xs bg-gray-400 text-white rounded-full w-4 h-4 inline-flex items-center justify-center">
-                              V
-                            </span>
-                          )}
-                          <span className='text-black'>{playerObj.name}</span>
-                        </div>
-                        <div className="text-sm text-gray-500">£{playerObj.price.toFixed(1)}m</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Available Players - Middle Column */}
-          <div className="col-span-1 lg:col-span-2">
-            <div className="mb-4">
-              <h4 className="text-md font-medium text-gray-700 mb-3">Available Players</h4>
-
-              {/* Filters */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                  <input
-                    type="text"
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md text-black"
-                    placeholder="Player or club name"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                  <div className="flex space-x-2">
-                    <button
-                      className={`px-3 py-1 text-sm rounded ${
-                        selectedPosition === 'All'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                      onClick={() => handlePositionChange('All')}
-                    >
-                      All
-                    </button>
-                    <button
-                      className={`px-3 py-1 text-sm rounded ${
-                        selectedPosition === 'GK'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                      onClick={() => handlePositionChange('GK')}
-                    >
-                      GK
-                    </button>
-                    <button
-                      className={`px-3 py-1 text-sm rounded ${
-                        selectedPosition === 'DEF'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                      onClick={() => handlePositionChange('DEF')}
-                    >
-                      DEF
-                    </button>
-                    <button
-                      className={`px-3 py-1 text-sm rounded ${
-                        selectedPosition === 'MID'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                      onClick={() => handlePositionChange('MID')}
-                    >
-                      MID
-                    </button>
-                    <button
-                      className={`px-3 py-1 text-sm rounded ${
-                        selectedPosition === 'FWD'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                      onClick={() => handlePositionChange('FWD')}
-                    >
-                      FWD
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Price (max £{priceRange[1]}m)
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="20"
-                    step="0.5"
-                    value={priceRange[1]}
-                    onChange={handlePriceRangeChange}
-                    className="block w-full"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-black mb-1">Sort By</label>
-                  <div className="flex">
-                    <select
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md rounded-r-none text-black"
-                      value={sortBy}
-                      onChange={handleSortChange}
-                    >
-                      <option value="totalPoints">Points</option>
-                      <option value="price">Price</option>
-                      <option value="form">Form</option>
-                      <option value="name">Name</option>
-                    </select>
-                    <button
-                      onClick={toggleSortOrder}
-                      className="cursor-pointer px-3 bg-gray-100 border border-gray-300 border-l-0 rounded-r-md text-black"
-                    >
-                      {sortOrder === 'asc' ? '↑' : '↓'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Players List */}
-              <div className="bg-white overflow-hidden border border-gray-200 sm:rounded-md">
-                {filteredPlayers.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500">
-                    No players found matching your criteria
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-                    {filteredPlayers.slice(0, 100).map((player) => (
-                      <li
-                        key={player.id}
-                        className={`px-4 py-2 hover:bg-gray-50 cursor-pointer ${
-                          selectedPlayer && selectedPlayer.id === player.id ? 'bg-blue-50' : ''
-                        }`}
-                        onClick={() => selectPlayer(player)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="flex items-center">
-                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-100 text-xs text-gray-800 mr-2">
-                                {player.position}
-                              </span>
-                              <span className="font-medium text-black">{player.name}</span>
-                            </div>
-                            <div className="text-sm text-gray-500">{player.club}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-black">£{player.price.toFixed(1)}m</div>
-                            <div className="text-sm text-gray-500">{player.totalPoints} pts</div>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-
-            {/* Transfer Action Section */}
-            {selectedPlayer && playerToReplace && typeof playerToReplace.player === 'object' && (
-              <div className="bg-white p-4 rounded border border-gray-200 mb-4">
-                <h4 className="text-md font-medium text-gray-700 mb-3">Transfer Preview</h4>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-red-50 p-3 rounded border border-red-100">
-                    <h5 className="text-sm font-medium text-red-700 mb-2">Player Out</h5>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-black">{playerToReplace.player.name}</div>
-                        <div className="text-sm text-black">{playerToReplace.player.club}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-black">
-                          £{playerToReplace.player.price.toFixed(1)}m
-                        </div>
-                        <div className="text-sm text-black">
-                          {playerToReplace.player.totalPoints} pts
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-green-50 p-3 rounded border border-green-100">
-                    <h5 className="text-sm font-medium text-green-700 mb-2">Player In</h5>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-black">{selectedPlayer.name}</div>
-                        <div className="text-sm text-black">{selectedPlayer.club}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-black">
-                          £{selectedPlayer.price.toFixed(1)}m
-                        </div>
-                        <div className="text-sm text-black">{selectedPlayer.totalPoints} pts</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex justify-between items-center">
-                  <div>
-                    <span className="text-sm text-gray-600">Price Difference: </span>
-                    <span
-                      className={
-                        selectedPlayer.price > playerToReplace.player.price
-                          ? 'text-red-600'
-                          : 'text-green-600'
-                      }
-                    >
-                      {selectedPlayer.price > playerToReplace.player.price ? '+' : '-'}
-                      £{Math.abs(selectedPlayer.price - playerToReplace.player.price).toFixed(1)}m
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={addTransfer}
-                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Add to Transfer List
-                  </button>
-                </div>
-                <div className="mt-3 flex justify-between items-center">
-                  <button
-                    onClick={cancelSelection}
-                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                  >
-                    Deselect
-                  </button>
-                  <button
-                    onClick={goBackToDashboard}
-                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    Back to Dashboard
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
-
-      {/* Confirmation Modal */}
-      {showConfirmation && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3 text-center">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Confirm Transfers</h3>
-              <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
-                  Are you sure you want to make {pendingTransfers.length} transfer
-                  {pendingTransfers.length > 1 ? 's' : ''}?
-                </p>
-                <div className="mt-4 border-t pt-4">
-                  {pendingTransfers.map((transfer, index) => {
-                    const outPlayer = typeof transfer.out.player === 'object' ? transfer.out.player : null;
-                    return (
-                      <div key={index} className="flex justify-between items-center mb-2 text-sm">
-                        <span className="text-red-600">{outPlayer?.name} OUT</span>
-                        <span className="text-green-600">{transfer.in.name} IN</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="border-t pt-4 mt-4">
-                  <p className="font-medium text-black">New Budget: £{calculateRemainingBudget().toFixed(1)}m</p>
-                </div>
-              </div>
-              <div className="items-center px-4 py-3 flex justify-between">
-                <button
-                  onClick={cancelConfirmation}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={processTransfers}
-                  className="px-4 py-2 bg-green-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  Confirm
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

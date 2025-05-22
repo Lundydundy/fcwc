@@ -3,29 +3,29 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-800 to-green-900">
+    <div className="min-h-screen bg-gradient-to-b from-green-800 to-green-900 px-2 sm:px-4">
       {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="pt-16 pb-8 sm:pt-24 sm:pb-12 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl">
+      <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div className="pt-12 pb-8 sm:pt-24 sm:pb-12 text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white">
             Fantasy Club World Cup
           </h1>
           <p className="mt-3 max-w-md mx-auto text-base text-green-100 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
             Create your dream team, compete with friends, and prove your football knowledge
           </p>
-          <div className="mt-8 flex justify-center">
+          <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
             <div className="rounded-md shadow">
               <Link 
                 href="/auth/register" 
-                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 md:py-4 md:text-lg md:px-10"
+                className="w-full flex items-center justify-center px-6 py-3 sm:px-8 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 md:py-4 md:text-lg md:px-10"
               >
                 Get Started
               </Link>
             </div>
-            <div className="ml-3 rounded-md shadow">
+            <div className="rounded-md shadow">
               <Link
                 href="/auth/login"
-                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 md:py-4 md:text-lg md:px-10"
+                className="w-full flex items-center justify-center px-6 py-3 sm:px-8 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 md:py-4 md:text-lg md:px-10"
               >
                 Log In
               </Link>
@@ -34,13 +34,13 @@ export default function Home() {
         </div>
 
         {/* Features Section */}
-        <div className="py-12 bg-white rounded-lg my-8">
-          <div className="max-w-xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-            <h2 className="text-center text-3xl font-extrabold text-gray-900 sm:text-4xl">
+        <div className="py-8 sm:py-12 bg-white rounded-lg my-8">
+          <div className="max-w-xl mx-auto px-2 sm:px-6 lg:max-w-7xl lg:px-8">
+            <h2 className="text-center text-2xl sm:text-3xl font-extrabold text-gray-900">
               How It Works
             </h2>
-            <div className="mt-12">
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 sm:mt-12">
+              <div className="grid grid-cols-1 gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="pt-6">
                   <div className="flow-root bg-gray-50 rounded-lg px-6 pb-8">
                     <div className="-mt-6">

@@ -49,9 +49,19 @@ async function fetchApi(
       headers,
     });
 
-    // Parse JSON response
-    const data = await response.json();
-    console.log('API Response:', data); // Debugging line to check the response
+    // Check Content-Type before parsing
+    const contentType = response.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      // Optionally log the text in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('API response was not JSON:', text);
+      }
+      throw new Error('API response was not valid JSON.');
+    }
     // Handle API errors
     if (!response.ok) {
       throw new Error(data.message || 'Something went wrong');

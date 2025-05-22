@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import teamService from '@/utils/api/teamService';
-import Image from 'next/image';
 
 // Define consistent types
 interface Player {
@@ -49,6 +48,8 @@ export default function EditFormation() {
   const [selectedPlayer, setSelectedPlayer] = useState<TeamPlayer | null>(null);
   const [selectedFormation, setSelectedFormation] = useState<string>('');
   const [formationChanged, setFormationChanged] = useState<boolean>(false);
+  const [currentGameweek, setCurrentGameweek] = useState<{ number: number; deadline: string } | null>(null);
+  const [gameweekPoints, setGameweekPoints] = useState<number | null>(null);
 
   // Available formations
   const availableFormations = ['4-3-3', '4-4-2', '3-5-2', '3-4-3', '5-3-2', '5-4-1', '4-5-1'];
@@ -161,7 +162,8 @@ export default function EditFormation() {
     
     loadTeam();
   }, []);
-  
+
+
   // Handle formation change
   const handleFormationChange = (newFormation: string) => {
     if (!team) return;
@@ -485,6 +487,17 @@ export default function EditFormation() {
     setBenchPlayers(newBenchPlayers);
   };
 
+  // Responsive: show a simplified view for very small screens
+  const [isMobileView, setIsMobileView] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 500);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
@@ -495,8 +508,30 @@ export default function EditFormation() {
     );
   }
   
+  if (isMobileView) {
+    return (
+      <div className="max-w-md mx-auto py-6 px-2">
+        <h1 className="text-xl font-bold mb-4 text-center">Edit Formation</h1>
+        <div className="bg-white rounded shadow p-4 text-center">
+          <p className="mb-4 text-gray-700">
+            The full formation editor is not available on very small screens.<br />
+            Please rotate your device or use a larger screen for the best experience.
+          </p>
+          <div className="flex flex-col gap-2">
+            <div>
+              <span className="font-semibold">Current Formation:</span> {team?.formation || 'N/A'}
+            </div>
+            <div>
+              <span className="font-semibold">Players:</span> {team?.players?.length || 0}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-5xl mx-auto py-8 px-2 sm:px-6 lg:px-8">
       {/* Back to Dashboard Button - Always Visible */}
       <div className="mb-6">
         <button

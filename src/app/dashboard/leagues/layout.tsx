@@ -5,8 +5,8 @@ import Link from 'next/link';
 
 export default function LeaguesLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-100 px-2 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-6">
         <div className="mb-6">
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-4">

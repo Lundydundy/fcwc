@@ -36,9 +36,9 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-800 to-green-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-green-800 to-green-900 flex flex-col justify-center py-8 px-2 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+        <h2 className="mt-6 text-center text-2xl sm:text-3xl font-extrabold text-white">
           Sign in to your account
         </h2>
         <p className="mt-2 text-center text-sm text-green-200">
