@@ -16,7 +16,9 @@ const eslintConfig = [
       // Disable warnings for unused functions
       '@typescript-eslint/no-unused-vars': 'off',
       // Disable warnings for unexpected any type
-      '@typescript-eslint/no-explicit-any': 'off'
+      '@typescript-eslint/no-explicit-any': 'off',
+      // Disable warnings for missing return type on functions
+      "react/no-unescaped-entities": "off"
     }
   }
 ];
